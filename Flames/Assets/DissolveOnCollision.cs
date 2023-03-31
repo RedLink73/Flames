@@ -1,24 +1,42 @@
-
+using System.Collections;
 using UnityEngine;
 
 public class DissolveOnCollision : MonoBehaviour
 {
     public Material dissolveMaterial;
+    public float dissolveTime = 1f;
 
-    public void Start()
+    private Collider objectCollider;
+
+    private void Start()
     {
-        Material dissolveMaterial = GetComponent<Renderer>().material;
+        objectCollider = GetComponent<Collider>();
         dissolveMaterial.SetFloat("_DissolveAmount", 0f);
+    }
+
+    private IEnumerator DissolveCoroutine()
+    {
+        float t = 0f;
+        while (t < dissolveTime)
+        {
+            t += Time.deltaTime;
+            dissolveMaterial.SetFloat("_DissolveAmount", t / dissolveTime);
+            yield return null;
+        }
+
+        // Disable the collider component after the dissolve is complete
+        objectCollider.enabled = false;
+
+        // Destroy the game object after the dissolve is complete
+        Destroy(gameObject);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        float t = 0;
         if (other.CompareTag("Fire"))
         {
-            t -= Time.deltaTime / 2f;
-            Material dissolveMaterial = GetComponent<Renderer>().material;
-            dissolveMaterial.SetFloat("_DissolveAmount", 2.0f);
+            StartCoroutine(DissolveCoroutine());
         }
     }
 }
+
